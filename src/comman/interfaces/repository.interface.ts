@@ -1,8 +1,7 @@
-import {
-  UserEntity,
-  PublicUser,
-  CreateUserInput,
-} from '../../users/dto/user.dto';
+import { UserEntity, PublicUser } from '../../users/dto/user.dto';
+
+import { CreateUserDto } from '../../users/dto/create-user.dto';
+import { UpdateUserDto } from '../../users/dto/update-user.dto';
 
 // Base Repository Interface
 export interface IBaseRepository<TRead, TCreate, TUpdate = Partial<TCreate>> {
@@ -16,7 +15,8 @@ export interface IBaseRepository<TRead, TCreate, TUpdate = Partial<TCreate>> {
 // Extended interface for User repository
 export interface IUserRepository extends IBaseRepository<
   PublicUser,
-  CreateUserInput
+  CreateUserDto,
+  UpdateUserDto
 > {
   findByEmail(email: string): Promise<UserEntity | null>;
   existsByEmail(email: string): Promise<boolean>;
