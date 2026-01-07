@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { IUserRepository } from '../comman/interfaces/repository.interface';
 import { PrismaService } from '../database/prisma.service';
 import { PublicUser, UserEntity } from '../users/dto/user.dto';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDtoType } from '../users/dto/create-user.dto';
+import { UpdateUserDtoType } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersRepository implements IUserRepository {
@@ -29,23 +29,24 @@ export class UsersRepository implements IUserRepository {
   }
 
   async existsByEmail(email: string): Promise<boolean> {
-    const count = await this.prisma.user.count({
+    return !!(await this.prisma.user.findUnique({
       where: { email },
-    });
-    return count > 0;
+      select: { id: true },
+    }));
   }
 
-  async create(data: CreateUserDto): Promise<PublicUser> {
+  async create(data: CreateUserDtoType): Promise<PublicUser> {
     return this.prisma.user.create({
       data,
       omit: { password: true },
     });
   }
 
-  async update(id: string, data: UpdateUserDto): Promise<PublicUser> {
+  async update(id: string, data: UpdateUserDtoType): Promise<PublicUser> {
     return this.prisma.user.update({
       where: { id },
       data,
+      omit: { password: true },
     });
   }
 
