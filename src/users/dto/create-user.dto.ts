@@ -25,6 +25,7 @@ export const CreateUserSchema = z.object({
 });
 
 export class CreateUserDto extends createZodDto(CreateUserSchema) {}
+export type CreateUserDtoType = z.infer<typeof CreateUserSchema>;
 
 /* createZodDto() creates NestJS-compatible DTO classes from Zod schemas
  * These DTOs:
