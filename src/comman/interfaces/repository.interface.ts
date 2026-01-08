@@ -2,6 +2,11 @@ import { UserEntity, PublicUser } from '../../users/dto/user.dto';
 
 import { CreateUserDtoType } from '../../users/dto/create-user.dto';
 import { UpdateUserDtoType } from '../../users/dto/update-user.dto';
+import {
+  CreatePostType,
+  PostEntity,
+  UpdatePostType,
+} from '../../posts/types/post.type';
 
 // Base Repository Interface
 export interface IBaseRepository<TRead, TCreate, TUpdate = Partial<TCreate>> {
@@ -23,7 +28,11 @@ export interface IUserRepository extends IBaseRepository<
 }
 
 // Extended interface for Post repository
-// export interface IPostRepository<T> extends IBaseRepository<T> {
-//   findByAuthorId(authorId: string): Promise<T[]>;
-//   findPublished(): Promise<T[]>;
-// }
+export interface IPostRepository extends IBaseRepository<
+  PostEntity,
+  CreatePostType,
+  UpdatePostType
+> {
+  findByAuthorId(authorId: string): Promise<PostEntity[]>;
+  findPublished(): Promise<PostEntity[]>;
+}
