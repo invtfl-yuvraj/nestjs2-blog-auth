@@ -37,6 +37,12 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
+    if (data.role === 'ADMIN' || data.role === 'EDITOR') {
+      throw new ConflictException(
+        'Cannot assign ADMIN or EDITOR role during registration',
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await this.usersRepository.create({
