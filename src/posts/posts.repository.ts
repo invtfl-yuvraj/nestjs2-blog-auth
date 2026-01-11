@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { IPostRepository } from '../comman/interfaces/repository.interface';
 import { PrismaService } from '../database/prisma.service';
-import { CreatePostType, PostEntity } from './types/post.type';
+import {
+  CreatePostType,
+  PostEntity,
+  PostWithAuthorEntity,
+} from './types/post.type';
 import { Prisma } from '../../generated/prisma/client';
 
 @Injectable()
@@ -115,14 +119,27 @@ export class PostsRepository implements IPostRepository {
 
   //   Find posts with advanced filtering Supports the validated query params from Zod
 
-  async findMany(options: {
-    where?: Prisma.PostWhereInput;
-    skip?: number;
-    take?: number;
-    orderBy?: Prisma.PostOrderByWithRelationInput;
-    include?: Prisma.PostInclude;
-  }): Promise<PostEntity[]> {
-    return this.prisma.post.findMany(options);
+  async findMany(
+    where: any,
+    skip: number,
+    query: any,
+  ): Promise<PostWithAuthorEntity[]> {
+    return await this.prisma.post.findMany({
+      where,
+      skip,
+      take: query.limit,
+      orderBy: { [query.sortBy]: query.sortOrder },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
   }
 
   //   Count posts matching criteria Needed for pagination
