@@ -11,10 +11,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto, CreatePostSchema, PostQueryDto, UpdatePostDto } from './dto/post.dto';
+import {
+  CreatePostDto,
+  CreatePostSchema,
+  PostQueryDto,
+  UpdatePostDto,
+} from './dto/post.dto';
 import { JwtAuthGuard } from '../comman/guards/jwt-auth.guard';
 import { Roles, RolesGuard } from '../comman/guards/roles.guard';
 import { Role } from '../../generated/prisma/enums';
+import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -35,7 +41,8 @@ export class PostsController {
      * /posts?limit=500 → 400 Bad Request: "Number must be less than or equal to 100"
      */
 
-    const userRole = req.user?.role;
+    const user = req.user as JwtPayloadDto;
+    const userRole = user?.role;
     return this.postsService.findAll(query, userRole);
   }
 
@@ -43,7 +50,8 @@ export class PostsController {
   @Get('my-posts')
   @UseGuards(JwtAuthGuard)
   async getMyPosts(@Query() query: PostQueryDto, @Request() req) {
-    return this.postsService.findMyPosts(req.user.id, query);
+    const user = req.user as JwtPayloadDto;
+    return this.postsService.findMyPosts(user.userId, query);
   }
 
   // GET /posts/:id [Get specific post]
@@ -57,7 +65,8 @@ export class PostsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.EDITOR)
   async create(@Body() createPostDto: CreatePostDto, @Request() req) {
-    return this.postsService.create(createPostDto, req.user.id);
+    const user = req.user as JwtPayloadDto;
+    return this.postsService.create(createPostDto, user.userId);
   }
 
   // PATCH /posts/:id [Update post (Author or Admin)]
@@ -68,12 +77,8 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
     @Request() req,
   ) {
-    return this.postsService.update(
-      id,
-      updatePostDto,
-      req.user.id,
-      req.user.role,
-    );
+    const user = req.user as JwtPayloadDto;
+    return this.postsService.update(id, updatePostDto, user.userId, user.role);
   }
 
   // PATCH /posts/:id/publish [Toggle publish status (Editor/Admin only)]
@@ -81,14 +86,16 @@ export class PostsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.EDITOR)
   async togglePublish(@Param('id') id: string, @Request() req) {
-    return this.postsService.togglePublish(id, req.user.role);
+    const user = req.user as JwtPayloadDto;
+    return this.postsService.togglePublish(id, user.role);
   }
 
   // DELETE /posts/:id [Delete post (Author or Admin)]
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: string, @Request() req) {
-    await this.postsService.remove(id, req.user.id, req.user.role);
+    const user = req.user as JwtPayloadDto;
+    await this.postsService.remove(id, user.userId, user.role);
     return { message: 'Post deleted successfully' };
   }
 
@@ -111,8 +118,9 @@ export class PostsController {
      *   { "title": "Post 2", "content": "Content 2..." }
      * ]
      */
+    const user = req.user as JwtPayloadDto;
     return Promise.all(
-      posts.map((post) => this.postsService.create(post, req.user.id)),
+      posts.map((post) => this.postsService.create(post, user.userId)),
     );
   }
 
