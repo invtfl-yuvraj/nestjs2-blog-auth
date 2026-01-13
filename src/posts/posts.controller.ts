@@ -28,6 +28,7 @@ export class PostsController {
 
   // GET /posts [Get all user's posts with pagination]
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(@Query() query: PostQueryDto, @Request() req) {
     /**
      * Zod automatically validates and transforms query params:
@@ -56,7 +57,7 @@ export class PostsController {
 
   // GET /posts/:id [Get specific post]
   @Get(':id')
-  async findOne(@Param() id: string) {
+  async findOne(@Param('id') id: string) {
     return this.postsService.findOne(id);
   }
 
