@@ -17,8 +17,9 @@ import { PublicUser } from './dto/user.dto';
 import { JwtAuthGuard } from '../comman/guards/jwt-auth.guard';
 import { Roles, RolesGuard } from '../comman/guards/roles.guard';
 import { Role } from '../../generated/prisma/enums';
+import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
 
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -29,23 +30,21 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  @Get()
   async findAll(): Promise<PublicUser[]> {
     return this.usersService.findAll();
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   async getMyProfile(@Request() req) {
-    const userId = (await req.user.id) as string;
-    return this.usersService.findOne(userId);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const user = req.user as JwtPayloadDto;
+
+    return this.usersService.findOne(user.userId);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.EDITOR)
   async findOne(@Param('id') id: string): Promise<PublicUser | null> {
@@ -53,20 +52,22 @@ export class UsersController {
   }
 
   @Patch('me')
-  @UseGuards(JwtAuthGuard)
   async updateMyProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     // Remove sensitive fields that users shouldn't change themselves
     // - Can't change their own role
     // - Can't activate/deactivate themselves
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const user = req.user as JwtPayloadDto;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, isActive, ...safeUpdates } = updateUserDto;
-    const userId = (await req.user.id) as string;
+    const userId = user.userId;
 
     return this.usersService.update(userId, safeUpdates);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async update(
@@ -77,14 +78,16 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async remove(
     @Param('id') id: string,
     @Request() req,
   ): Promise<{ message: string }> {
-    if (id === req.user.id) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const user = req.user as JwtPayloadDto;
+
+    if (id === user.userId) {
       throw new Error('Cannot delete your own account');
     }
 
@@ -94,14 +97,4 @@ export class UsersController {
       message: 'User deleted successfully',
     };
   }
-
-  //Get all posts by a specific user (ADMIN or EDITOR)
-
-  // @Get(':id/posts')
-  // @UseGuards(RolesGuard)
-  // @Roles(Role.ADMIN, Role.EDITOR)
-  // async getUserPosts(@Param('id') id: string) {
-  //   // Would need to implement this in service : return this.usersService.getUserPosts(id);
-  //   return { message: 'Not implemented yet' };
-  // }
 }
