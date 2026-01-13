@@ -5,9 +5,21 @@ import { APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), DatabaseModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+    }),
+    DatabaseModule,
+    UsersModule,
+    AuthModule,
+    PostsModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
