@@ -18,7 +18,7 @@ import { JwtAuthGuard } from '../comman/guards/jwt-auth.guard';
 import { Roles, RolesGuard } from '../comman/guards/roles.guard';
 import { Role } from '../../generated/prisma/enums';
 
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -29,6 +29,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Get()
@@ -37,12 +38,14 @@ export class UsersController {
   }
 
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   async getMyProfile(@Request() req) {
     const userId = (await req.user.id) as string;
     return this.usersService.findOne(userId);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.EDITOR)
   async findOne(@Param('id') id: string): Promise<PublicUser | null> {
@@ -50,6 +53,7 @@ export class UsersController {
   }
 
   @Patch('me')
+  @UseGuards(JwtAuthGuard)
   async updateMyProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     // Remove sensitive fields that users shouldn't change themselves
     // - Can't change their own role
@@ -62,6 +66,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async update(
@@ -72,6 +77,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async remove(
