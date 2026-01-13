@@ -10,10 +10,6 @@ import { Injectable as InjectableDecorator, CanActivate } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtPayloadDto } from '../../auth/dto/jwt-payload.dto';
 
-interface AuthenticatedRequest extends Request {
-  user: JwtPayloadDto;
-}
-
 // ROLES_KEY - Metadata key for storing role requirements
 export const ROLES_KEY = 'roles';
 export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
@@ -44,13 +40,13 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedRequest;
+    const req = context.switchToHttp().getRequest<{ user: JwtPayloadDto }>();
+    const user = req.user;
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('User not authenticated');
     }
 
-    return requiredRoles.includes(user.user.role);
+    return requiredRoles.includes(user.role);
   }
 }
